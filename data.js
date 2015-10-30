@@ -44,7 +44,6 @@ function fetchProject(project_id) {
       const project = JSON.parse(body);
       projects_[project_id] = project;
       loaded_[project_id].project = true;
-      //helpers.pp(project);
     }
   });
 }
@@ -68,7 +67,6 @@ function fetchStories(project_id, start_date, end_date) {
       const stories = JSON.parse(body);
       stories_[project_id] = stories;
       loaded_[project_id].stories = true;
-      //helpers.pp(stories);
     }
   });
 }
@@ -87,7 +85,7 @@ function fetchIterations(project_id) {
   request(options, (error, response, body) => {
     if (!error && response.statusCode == 200) {
       const iterations = JSON.parse(body);
-      iterations_[project_id] = iterations;
+      iterations_[project_id] = iterations[0];
       loaded_[project_id].iterations = true;
     }
   });
