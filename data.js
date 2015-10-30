@@ -12,7 +12,6 @@ var me_ = {};
 var projects_ = {};
 var stories_ = {};
 var iterations_ = {};
-var current_iteration_stories_ = [];
 var iteration_stories_ = [];
 
 var loaded_ = null;
@@ -102,8 +101,6 @@ function fetchIterations(project_id) {
 
           iteration_stories_.push(stories);
         });
-
-        current_iteration_stories_ = iteration_stories_[0];
       } else {
         console.log('weird issue with api?')
       }
@@ -160,7 +157,6 @@ module.exports = {
       me: me_,
       projects: projects_,
       iterations: iterations_,
-      current_iteration_stories: current_iteration_stories_,
       iteration_stories: iteration_stories_,
     }
   },
