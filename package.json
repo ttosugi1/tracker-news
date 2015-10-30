@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/ttosugi1/tracker-news/issues"
   },
-  "homepage": "https://github.com/ttosugi1/tracker-news#readme"
+  "homepage": "https://github.com/ttosugi1/tracker-news#readme",
+  "dependencies": {
+    "request": "^2.65.0"
+  }
 }
