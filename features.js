@@ -1,16 +1,24 @@
 const _ = require('lodash');
 
 function story_ownership_count(raw, iterationsBack) {
-  return raw.iteration_stories[iterationsBack].reduce((acc, story) => {
-    return _.contains(story.owner_ids, raw.me.id) ? acc + 1 : acc;
-  }, 0);
+  if (iterationsBack < raw.iteration_stories.length) {
+    return raw.iteration_stories[iterationsBack].reduce((acc, story) => {
+      return _.contains(story.owner_ids, raw.me.id) ? acc + 1 : acc;
+    }, 0);
+  } else {
+    return 0;
+  }
 }
 
 function story_count_by_state(raw, state, iterationsBack) {
-  return raw.iteration_stories[iterationsBack].reduce((acc, story) => {
-    return _.contains(story.owner_ids, raw.me.id) && story.current_state == state ?
-      acc + 1 : acc;
-  }, 0);
+  if (iterationsBack < raw.iteration_stories.length) {
+    return raw.iteration_stories[iterationsBack].reduce((acc, story) => {
+      return _.contains(story.owner_ids, raw.me.id) && story.current_state == state ?
+        acc + 1 : acc;
+    }, 0);
+  } else {
+    return 0;
+  }
 }
 
 module.exports = {

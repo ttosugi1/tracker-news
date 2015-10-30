@@ -134,12 +134,9 @@ module.exports = {
   fetch: function() {
     fetchMe(() => {
       loaded_ = {}
-      const project_ids = me_.projects.reduce(function(acc, project) {
-        if (project.project_id === 808147) {
-          acc.push(project.project_id);
-        }
-        return acc;
-      }, []);
+      const project_ids = process.env.PROJECT_IDS.split(',') || me_.projects.map((project) => {
+        return project.project_id;
+      });
 
       project_ids.forEach((project_id) => {
         loaded_[project_id] = {
