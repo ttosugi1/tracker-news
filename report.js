@@ -1,11 +1,16 @@
 const strftime = require('strftime');
+const _ = require('lodash');
 
 function title(data) {
-  return `Report for ${data.me.name}`
+  return `Report Card for ${data.me.name}`
 }
 
 function timestamp() {
   return strftime('%B %d, %Y %H:%M')
+}
+
+function iterationTrends() {
+  return "\n-------------------------\nChanges from last iteration\n-------------------------";
 }
 
 function story_ownership(data) {
@@ -22,35 +27,64 @@ function story_ownership(data) {
 }
 
 function story_started(data) {
-  return `For this iteration ${data.story_finished_count} stories you owned were started`
+  if (data.story_started_counts[0] > 0) {
+    return `You have ${data.story_started_counts[0]} stories in progress (aka started)`;
+  }
+  return null;
 }
 
 function story_finished(data) {
-  return `For this iteration ${data.story_finished_count} stories you owned were finished`
+  if (data.story_finished_counts[0] > 0) {
+    return `You have ${data.story_started_counts[0]} stories in waiting to be deployed (aka finished)`;
+  }
+  return null;
 }
 
-function story_acceptance(data) {
-  return `For this iteration ${data.story_acceptance_count} stories you owned were accepted`
+function story_delivered(data) {
+  if (data.story_delivered_counts[0] > 0) {
+    return `You have ${data.story_started_counts[0]} stories in waiting to be accepted (or rejected)`;
+  }
+  return null;
+}
+
+function story_accepted(data) {
+  const current = data.story_accepted_counts[0];
+  const previous = data.story_accepted_counts[1];
+
+  if (current > previous) {
+    return `More of your stories were accepted from ${previous} to ${current}`
+  } else if (current < previous) {
+    return `Less of your stories were accepted from ${previous} to ${current}`
+  } else {
+    return `The number of story accepted have stayed steady`;
+  }
 }
 
 function story_rejection(data) {
-  return `For this iteration ${data.story_rejected_count} stories you owned were rejected`
-}
+  const current = data.story_rejected_counts[0];
+  const previous = data.story_rejected_counts[1];
 
-function story_cycle_time(data) {
-
+  if (current > previous) {
+    return `As for number of rejected stories, they have increased from ${previous} to ${current}.`;
+  } else if (current < previous) {
+    return `As for number of rejected stories, they have decreased from ${previous} to ${current}.`;
+  } else {
+    return `The number of story rejections have stayed the same`;
+  }
 }
 
 module.exports = {
   generate: function(data) {
-    return [
+    return _.compact([
       title(data),
       timestamp(),
+      iterationTrends(),
       story_ownership(data),
       story_started(data),
       story_finished(data),
-      story_acceptance(data),
+      story_delivered(data),
+      story_accepted(data),
       story_rejection(data),
-    ].join("\n");
+    ]).join("\n");
   }
 }
