@@ -1,0 +1,24 @@
+{
+  "name": "tracker-news",
+  "version": "1.0.0",
+  "description": "Daily reports on your tracker project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ttosugi1/tracker-news.git"
+  },
+  "keywords": [
+    "tracker",
+    "reports",
+    "news"
+  ],
+  "author": "Thomas Osugi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ttosugi1/tracker-news/issues"
+  },
+  "homepage": "https://github.com/ttosugi1/tracker-news#readme"
+}
