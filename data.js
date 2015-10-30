@@ -1,5 +1,6 @@
 const request = require('request');
 const helpers = require('./helpers');
+const _ = require('lodash');
 
 const HEADERS = {
   'X-TrackerToken': process.env.TRACKER_TOKEN
@@ -11,6 +12,8 @@ var me_ = {};
 var projects_ = {};
 var stories_ = {};
 var iterations_ = {};
+var current_iteration_stories_ = [];
+var iteration_stories_ = [];
 
 var loaded_ = null;
 
@@ -25,7 +28,6 @@ function fetchMe(callback) {
   request(options, (error, response, body) => {
     if (!error && response.statusCode == 200) {
       me_ = JSON.parse(body);
-      helpers.pp(me_);
       callback();
     }
   });
@@ -75,7 +77,8 @@ function fetchIterations(project_id) {
   const options = {
     url: `${BASE_URI}/projects/${project_id}/iterations`,
     qs: {
-      scope: 'current'
+      offset: -3,
+      scope: 'done_current'
     },
     headers: HEADERS
   }
@@ -85,8 +88,29 @@ function fetchIterations(project_id) {
   request(options, (error, response, body) => {
     if (!error && response.statusCode == 200) {
       const iterations = JSON.parse(body);
-      iterations_[project_id] = iterations[0];
+      const reverseIterations = iterations.reverse()
+
+      if (reverseIterations.length > 0) {
+        iterations_[project_id] = reverseIterations;
+
+        reverseIterations.forEach((current_iteration) => {
+          stories = [];
+
+          current_iteration.stories.forEach((story) => {
+            stories.push(story);
+          });
+
+          iteration_stories_.push(stories);
+        });
+
+        current_iteration_stories_ = iteration_stories_[0];
+      } else {
+        console.log('weird issue with api?')
+      }
+
       loaded_[project_id].iterations = true;
+    } else {
+      console.log(response.statusCode)
     }
   });
 }
@@ -110,7 +134,13 @@ module.exports = {
   fetch: function() {
     fetchMe(() => {
       loaded_ = {}
-      const project_ids = me_.projects.map(project => project.project_id);
+      const project_ids = me_.projects.reduce(function(acc, project) {
+        if (project.project_id === 808147) {
+          acc.push(project.project_id);
+        }
+        return acc;
+      }, []);
+
       project_ids.forEach((project_id) => {
         loaded_[project_id] = {
           project: false,
@@ -133,6 +163,8 @@ module.exports = {
       me: me_,
       projects: projects_,
       iterations: iterations_,
+      current_iteration_stories: current_iteration_stories_,
+      iteration_stories: iteration_stories_,
     }
   },
 }
