@@ -1,3 +1,5 @@
+"use strict";
+
 const request = require('request');
 const helpers = require('./helpers');
 const _ = require('lodash');
@@ -96,7 +98,7 @@ function fetchIterations(project_id) {
           projects_[project_id].iteration_stories = [];
 
           reverseIterations.forEach((current_iteration) => {
-            stories = [];
+            let stories = [];
 
             current_iteration.stories.forEach((story) => {
               stories.push(story);

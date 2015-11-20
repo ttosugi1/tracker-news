@@ -1,3 +1,5 @@
+"use strict";
+
 const strftime = require('strftime');
 const _ = require('lodash');
 

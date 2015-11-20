@@ -1,3 +1,5 @@
+"use strict";
+
 const _ = require('lodash');
 
 function story_ownership_count(me, iteration_stories, iterationsBack) {
@@ -22,7 +24,7 @@ function story_count_by_state(me, iteration_stories, state, iterationsBack) {
 }
 
 function statsByProject(me, project) {
-  result = {};
+  let result = {};
   result.story_ownership_counts = [0, 1, 2].map((iterationsBack) => {
     return story_ownership_count(me, project.iteration_stories, iterationsBack);
   })
