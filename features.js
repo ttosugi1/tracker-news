@@ -23,6 +23,26 @@ function story_count_by_state(me, iteration_stories, state, iterationsBack) {
   }
 }
 
+function collaborator_count(me, iteration_stories, iterationsBack) {
+  let count = {};
+
+  if (iterationsBack < iteration_stories.length) {
+    iteration_stories[iterationsBack].forEach((story) => {
+      if (_.contains(story.owner_ids, me.id)) {
+        story.owner_ids.forEach((ownerId) => {
+          if (count[ownerId]) {
+            count[ownerId]++;
+          } else {
+            count[ownerId] = 1;
+          }
+        });
+      }
+    });
+  }
+
+  return count;
+}
+
 function statsByProject(me, project) {
   let result = {};
   result.story_ownership_counts = [0, 1, 2].map((iterationsBack) => {
@@ -48,6 +68,13 @@ function statsByProject(me, project) {
   result.story_rejected_counts = [0, 1, 2].map((iterationsBack) => {
     return story_count_by_state(me, project.iteration_stories, 'rejected', iterationsBack);
   });
+
+  result.collaborator_counts = [0, 1, 2].map((iterationsBack) => {
+    return collaborator_count(me, project.iteration_stories, iterationsBack);
+  });
+
+  //console.log('result.collaborator_counts', result.collaborator_counts);
+
   return result;
 }
 

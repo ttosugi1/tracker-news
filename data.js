@@ -13,6 +13,7 @@ const BASE_URI = 'https://www.pivotaltracker.com/services/v5'
 let me_ = {};
 let projects_ = {};
 let stories_ = {};
+let personMap_ = {};
 
 function fetchMe() {
   return new Promise((resolve, reject) => {
@@ -52,12 +53,6 @@ function fetchProject(project_id) {
     });
   });
 }
-
-function fetchProjects(project_ids) {
-  project_ids.forEach((project_id) => {
-    fetchProject(project_id);
-  })
-};
 
 function fetchStories(project_id, start_date, end_date) {
   const options = {
@@ -119,6 +114,32 @@ function fetchIterations(project_id) {
   });
 }
 
+function fetchProjectMemberships(project_id) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      url: `${BASE_URI}/projects/${project_id}/memberships`,
+      headers: HEADERS
+    }
+
+    console.log(`fetchProjectMemberships ${project_id}`);
+
+    request(options, (error, response, body) => {
+      if (!error && response.statusCode == 200) {
+        const memberships = JSON.parse(body);
+        projects_[project_id].memberships = memberships;
+
+        memberships.forEach((membership) => {
+          personMap_[membership.person.id] = membership.person;
+        });
+
+        resolve();
+      } else {
+        reject();
+      }
+    });
+  });
+}
+
 module.exports = {
   fetch: function() {
     return new Promise((resolve, reject) => {
@@ -136,7 +157,11 @@ module.exports = {
 
         Promise.all(fetchProjectPromises).then((value) => {
           const fetchIterationPromises = projectIds.map(project_id => fetchIterations(project_id));
-          Promise.all(fetchIterationPromises).then((value) => {
+          const fetchProjectMembershipPromises = projectIds.map(project_id => fetchProjectMemberships(project_id));
+
+          const allPromises = [...fetchIterationPromises, ...fetchProjectMembershipPromises];
+
+          Promise.all(allPromises).then((value) => {
             resolve('projects all loaded!');
           })
         }, (reason) => {
@@ -153,6 +178,7 @@ module.exports = {
     return {
       me: me_,
       projects: projects_,
+      personMap: personMap_,
     }
   },
 }

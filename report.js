@@ -2,6 +2,7 @@
 
 const strftime = require('strftime');
 const _ = require('lodash');
+const pluralize = require('pluralize');
 
 function title(data) {
   return `Report Card for ${data.me.name}`
@@ -12,11 +13,11 @@ function timestamp() {
 }
 
 function project_name(data) {
-  return `Project ${data.name}`;
+  return `\n*Project ${data.name}*`;
 }
 
 function iterationTrends() {
-  return "\n-------------------------\nChanges from last iteration\n-------------------------";
+  return "\n========================\nChanges from last iteration\n========================";
 }
 
 function story_ownership(data) {
@@ -79,6 +80,13 @@ function story_rejection(data) {
   }
 }
 
+function collaborator_count(project) {
+  const current = _.keys(project.collaborator_counts[0]).length;
+  const previous = _.keys(project.collaborator_counts[1]).length;
+
+  return `You had ${pluralize('collaborator', current, true)} this iteration.`;
+}
+
 function ownership_interestingness(project) {
   if (project.story_ownership_counts[0] > 0 || project.story_ownership_counts[1] > 0) {
     return 1.0;
@@ -100,6 +108,9 @@ function iteration_report(data) {
       items.push(story_delivered(project));
       items.push(story_accepted(project));
       items.push(story_rejection(project));
+
+      items.push(collaborator_count(project));
+
     }
   });
 
