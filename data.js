@@ -14,38 +14,42 @@ var stories_ = {};
 var iterations_ = {};
 var iteration_stories_ = [];
 
-var loaded_ = null;
-
-function fetchMe(callback) {
-  const options = {
-    url: `${BASE_URI}/me`,
-    headers: HEADERS
-  }
-
-  console.log(`fetchMe`);
-
-  request(options, (error, response, body) => {
-    if (!error && response.statusCode == 200) {
-      me_ = JSON.parse(body);
-      callback();
+function fetchMe() {
+  return new Promise((resolve, reject) => {
+    const options = {
+      url: `${BASE_URI}/me`,
+      headers: HEADERS
     }
+
+    request(options, (error, response, body) => {
+      if (!error && response.statusCode == 200) {
+        me_ = JSON.parse(body);
+        resolve();
+      } else {
+        reject();
+      }
+    });
   });
 }
 
 function fetchProject(project_id) {
-  const options = {
-    url: `${BASE_URI}/projects/${project_id}`,
-    headers: HEADERS
-  }
+  return new Promise(function(resolve, reject) {
+    console.log(`fetchProject ${project_id}`);
 
-  console.log(`fetchProject ${project_id}`);
-
-  request(options, (error, response, body) => {
-    if (!error && response.statusCode == 200) {
-      const project = JSON.parse(body);
-      projects_[project_id] = project;
-      loaded_[project_id].project = true;
+    const options = {
+      url: `${BASE_URI}/projects/${project_id}`,
+      headers: HEADERS
     }
+
+    request(options, (error, response, body) => {
+      if (!error && response.statusCode == 200) {
+        const project = JSON.parse(body);
+        projects_[project_id] = project;
+        resolve();
+      } else {
+        reject();
+      }
+    });
   });
 }
 
@@ -67,90 +71,80 @@ function fetchStories(project_id, start_date, end_date) {
     if (!error && response.statusCode == 200) {
       const stories = JSON.parse(body);
       stories_[project_id] = stories;
-      loaded_[project_id].stories = true;
     }
   });
 }
 
 function fetchIterations(project_id) {
-  const options = {
-    url: `${BASE_URI}/projects/${project_id}/iterations`,
-    qs: {
-      offset: -3,
-      scope: 'done_current'
-    },
-    headers: HEADERS
-  }
+  return new Promise((resolve, reject) => {
+    const options = {
+      url: `${BASE_URI}/projects/${project_id}/iterations`,
+      qs: {
+        offset: -3,
+        scope: 'done_current'
+      },
+      headers: HEADERS
+    }
 
-  console.log(`fetchIterations ${project_id}`);
+    console.log(`fetchIterations ${project_id}`);
 
-  request(options, (error, response, body) => {
-    if (!error && response.statusCode == 200) {
-      const iterations = JSON.parse(body);
-      const reverseIterations = iterations.reverse()
+    request(options, (error, response, body) => {
+      if (!error && response.statusCode == 200) {
+        const iterations = JSON.parse(body);
+        const reverseIterations = iterations.reverse()
 
-      if (reverseIterations.length > 0) {
-        iterations_[project_id] = reverseIterations;
+        if (reverseIterations.length > 0) {
+          iterations_[project_id] = reverseIterations;
 
-        reverseIterations.forEach((current_iteration) => {
-          stories = [];
+          reverseIterations.forEach((current_iteration) => {
+            stories = [];
 
-          current_iteration.stories.forEach((story) => {
-            stories.push(story);
+            current_iteration.stories.forEach((story) => {
+              stories.push(story);
+            });
+
+            iteration_stories_.push(stories);
           });
-
-          iteration_stories_.push(stories);
-        });
+          resolve();
+        } else {
+          console.log('weird issue with api?')
+          reject();
+        }
       } else {
-        console.log('weird issue with api?')
+        reject();
+        console.log(response.statusCode)
       }
-
-      loaded_[project_id].iterations = true;
-    } else {
-      console.log(response.statusCode)
-    }
+    });
   });
-}
-
-function loaded() {
-  if (loaded_ === null) {
-    return false;
-  }
-
-  for (var projectId in loaded_) {
-    if (loaded_[projectId].project === false ||
-          loaded_[projectId].iterations === false) {
-      return false;
-    }
-  }
-
-  return true;
 }
 
 module.exports = {
   fetch: function() {
-    fetchMe(() => {
-      loaded_ = {}
-      const project_ids = process.env.PROJECT_IDS.split(',') || me_.projects.map((project) => {
-        return project.project_id;
-      });
+    return new Promise((resolve, reject) => {
+      var fetchMePromise = fetchMe();
+      fetchMePromise.then((value) => {
+        userProjectIds = process.env.PROJECT_IDS.split(',');
 
-      project_ids.forEach((project_id) => {
-        loaded_[project_id] = {
-          project: false,
-          stories: false
-        };
-      });
+        const project_ids = process.env.PROJECT_IDS.split(',') || me_.projects.map((project) => {
+          return project.project_id;
+        });
 
-      fetchProjects(project_ids);
+        const fetchProjectPromises = project_ids.map(project_id => fetchProject(project_id));
+        const fetchIterationPromises = project_ids.map(project_id => fetchIterations(project_id));
 
-      project_ids.forEach((project_id) => {
-        fetchIterations(project_id);
+        const allPromises = [...fetchProjectPromises, ...fetchIterationPromises];
+
+        Promise.all(allPromises).then((value) => {
+          resolve('projects all loaded!');
+        }, (reason) => {
+          reject('projects not loaded!');
+        });
+
+      }, (reason) => {
+        reject('fetch me failed');
       });
     });
   },
-
-  loaded: loaded,
 
   get: function() {
     return {
