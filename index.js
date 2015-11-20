@@ -6,8 +6,6 @@ var fetchPromise = data.fetch();
 var done = false;
 
 fetchPromise.then((value) => {
-  console.log(`fetch success! ${value}`);
-
   console.log('=============================================');
   console.log(report.generate(features.generate(data.get())));
   console.log('=============================================');

@@ -11,8 +11,6 @@ const BASE_URI = 'https://www.pivotaltracker.com/services/v5'
 var me_ = {};
 var projects_ = {};
 var stories_ = {};
-var iterations_ = {};
-var iteration_stories_ = [];
 
 function fetchMe() {
   return new Promise((resolve, reject) => {
@@ -94,7 +92,8 @@ function fetchIterations(project_id) {
         const reverseIterations = iterations.reverse()
 
         if (reverseIterations.length > 0) {
-          iterations_[project_id] = reverseIterations;
+          projects_[project_id].iterations = reverseIterations;
+          projects_[project_id].iteration_stories = [];
 
           reverseIterations.forEach((current_iteration) => {
             stories = [];
@@ -103,7 +102,7 @@ function fetchIterations(project_id) {
               stories.push(story);
             });
 
-            iteration_stories_.push(stories);
+            projects_[project_id].iteration_stories.push(stories);
           });
           resolve();
         } else {
@@ -123,19 +122,21 @@ module.exports = {
     return new Promise((resolve, reject) => {
       var fetchMePromise = fetchMe();
       fetchMePromise.then((value) => {
-        userProjectIds = process.env.PROJECT_IDS.split(',');
+        var projectIds;
 
-        const project_ids = process.env.PROJECT_IDS.split(',') || me_.projects.map((project) => {
-          return project.project_id;
-        });
+        if (process.env.PROJECT_IDS) {
+          projectIds = process.env.PROJECT_IDS.split(',');
+        } else {
+          projectIds = me_.projects.map(project => project.project_id);
+        }
 
-        const fetchProjectPromises = project_ids.map(project_id => fetchProject(project_id));
-        const fetchIterationPromises = project_ids.map(project_id => fetchIterations(project_id));
+        const fetchProjectPromises = projectIds.map(project_id => fetchProject(project_id));
 
-        const allPromises = [...fetchProjectPromises, ...fetchIterationPromises];
-
-        Promise.all(allPromises).then((value) => {
-          resolve('projects all loaded!');
+        Promise.all(fetchProjectPromises).then((value) => {
+          const fetchIterationPromises = projectIds.map(project_id => fetchIterations(project_id));
+          Promise.all(fetchIterationPromises).then((value) => {
+            resolve('projects all loaded!');
+          })
         }, (reason) => {
           reject('projects not loaded!');
         });
@@ -150,8 +151,6 @@ module.exports = {
     return {
       me: me_,
       projects: projects_,
-      iterations: iterations_,
-      iteration_stories: iteration_stories_,
     }
   },
 }

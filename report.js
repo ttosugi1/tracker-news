@@ -9,6 +9,10 @@ function timestamp() {
   return strftime('%B %d, %Y %H:%M')
 }
 
+function project_name(data) {
+  return `Project ${data.name}`;
+}
+
 function iterationTrends() {
   return "\n-------------------------\nChanges from last iteration\n-------------------------";
 }
@@ -75,16 +79,22 @@ function story_rejection(data) {
 
 module.exports = {
   generate: function(data) {
-    return _.compact([
-      title(data),
-      timestamp(),
-      iterationTrends(),
-      story_ownership(data),
-      story_started(data),
-      story_finished(data),
-      story_delivered(data),
-      story_accepted(data),
-      story_rejection(data),
-    ]).join("\n");
+    var items = [];
+
+    items.push(title(data));
+    items.push(timestamp());
+    items.push(iterationTrends());
+
+    _.values(data.projects).forEach((project) => {
+      items.push(project_name(project));
+      items.push(story_ownership(project));
+      items.push(story_started(project));
+      items.push(story_finished(project));
+      items.push(story_delivered(project));
+      items.push(story_accepted(project));
+      items.push(story_rejection(project));
+    });
+
+    return _.compact(items).join("\n");
   }
 }
