@@ -1,9 +1,11 @@
+"use strict";
+
 const data = require('./data');
 const report = require('./report');
 const features = require('./features');
 
-var fetchPromise = data.fetch();
-var done = false;
+let fetchPromise = data.fetch();
+let done = false;
 
 fetchPromise.then((value) => {
   console.log('=============================================');
