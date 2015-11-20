@@ -22,7 +22,7 @@ function story_ownership(data) {
   const previous = data.story_ownership_counts[1];
 
   if (current > previous) {
-    return `Number of stories you have owned has increased to ${current} from ${previous}.`
+    return `Number of stories you have owned has increased from ${previous} to ${current}.`
   } else if (current < previous) {
     return `Number of stories you have owned has decreased from ${previous} to ${current}.`
   } else {
@@ -77,15 +77,20 @@ function story_rejection(data) {
   }
 }
 
-module.exports = {
-  generate: function(data) {
-    var items = [];
+function ownership_interestingness(project) {
+  if (project.story_ownership_counts[0] > 0 || project.story_ownership_counts[1] > 0) {
+    return 1.0;
+  } else {
+    return 0.0;
+  }
+}
 
-    items.push(title(data));
-    items.push(timestamp());
-    items.push(iterationTrends());
+function iteration_report(data) {
+  var items = [];
 
-    _.values(data.projects).forEach((project) => {
+  items.push(iterationTrends());
+  _.values(data.projects).forEach((project) => {
+    if (ownership_interestingness(project) > 0) {
       items.push(project_name(project));
       items.push(story_ownership(project));
       items.push(story_started(project));
@@ -93,7 +98,20 @@ module.exports = {
       items.push(story_delivered(project));
       items.push(story_accepted(project));
       items.push(story_rejection(project));
-    });
+    }
+  });
+
+  return items;
+}
+
+module.exports = {
+  generate: function(data) {
+    var items = [];
+
+    items.push(title(data));
+    items.push(timestamp());
+
+    items = items.concat(iteration_report(data));
 
     return _.compact(items).join("\n");
   }
