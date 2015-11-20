@@ -87,6 +87,16 @@ function collaborator_count(project) {
   return `You had ${pluralize('collaborator', current, true)} this iteration.`;
 }
 
+function top_collaborator(project) {
+  const current = project.collaborator_ranks[0];
+
+  if (current.length > 0) {
+    return `Your top collaborator was ${current[0].name} with ${pluralize('story', current[0].count, true)} shared.`;
+  } else {
+    return undefined;
+  }
+}
+
 function ownership_interestingness(project) {
   if (project.story_ownership_counts[0] > 0 || project.story_ownership_counts[1] > 0) {
     return 1.0;
@@ -110,7 +120,7 @@ function iteration_report(data) {
       items.push(story_rejection(project));
 
       items.push(collaborator_count(project));
-
+      items.push(top_collaborator(project));
     }
   });
 

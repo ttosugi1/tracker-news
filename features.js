@@ -30,10 +30,12 @@ function collaborator_count(me, iteration_stories, iterationsBack) {
     iteration_stories[iterationsBack].forEach((story) => {
       if (_.contains(story.owner_ids, me.id)) {
         story.owner_ids.forEach((ownerId) => {
-          if (count[ownerId]) {
-            count[ownerId]++;
-          } else {
-            count[ownerId] = 1;
+          if (me.id != ownerId) {
+            if (count[ownerId]) {
+              count[ownerId]++;
+            } else {
+              count[ownerId] = 1;
+            }
           }
         });
       }
@@ -43,7 +45,15 @@ function collaborator_count(me, iteration_stories, iterationsBack) {
   return count;
 }
 
-function statsByProject(me, project) {
+function collaborator_rank(collaborator_count, personMap) {
+  const topCollaborators = _.chain(collaborator_count).pairs().sortBy(item => item[1]).reverse().value();
+  const result = topCollaborators.map((item) => {
+    return {name: personMap[item[0]].name, count: item[1]};
+  });
+  return result;
+}
+
+function statsByProject(me, project, personMap) {
   let result = {};
   result.story_ownership_counts = [0, 1, 2].map((iterationsBack) => {
     return story_ownership_count(me, project.iteration_stories, iterationsBack);
@@ -73,7 +83,9 @@ function statsByProject(me, project) {
     return collaborator_count(me, project.iteration_stories, iterationsBack);
   });
 
-  //console.log('result.collaborator_counts', result.collaborator_counts);
+  result.collaborator_ranks = [0, 1, 2].map((iterationsBack) => {
+    return collaborator_rank(result.collaborator_counts[iterationsBack], personMap);
+  });
 
   return result;
 }
@@ -83,7 +95,8 @@ module.exports = {
     let result = Object.assign({}, raw);
 
     _.values(raw.projects).forEach((project) => {
-      result.projects[project.id] = Object.assign({}, project, statsByProject(raw.me, project));
+      result.projects[project.id] = Object.assign({}, project,
+        statsByProject(raw.me, project, raw.personMap));
     })
 
     return result;
