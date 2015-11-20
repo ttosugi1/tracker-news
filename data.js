@@ -8,9 +8,9 @@ const HEADERS = {
 
 const BASE_URI = 'https://www.pivotaltracker.com/services/v5'
 
-var me_ = {};
-var projects_ = {};
-var stories_ = {};
+let me_ = {};
+let projects_ = {};
+let stories_ = {};
 
 function fetchMe() {
   return new Promise((resolve, reject) => {
@@ -120,9 +120,9 @@ function fetchIterations(project_id) {
 module.exports = {
   fetch: function() {
     return new Promise((resolve, reject) => {
-      var fetchMePromise = fetchMe();
+      let fetchMePromise = fetchMe();
       fetchMePromise.then((value) => {
-        var projectIds;
+        let projectIds;
 
         if (process.env.PROJECT_IDS) {
           projectIds = process.env.PROJECT_IDS.split(',');

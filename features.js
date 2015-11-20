@@ -51,7 +51,7 @@ function statsByProject(me, project) {
 
 module.exports = {
   generate: function(raw) {
-    var result = Object.assign({}, raw);
+    let result = Object.assign({}, raw);
 
     _.values(raw.projects).forEach((project) => {
       result.projects[project.id] = Object.assign({}, project, statsByProject(raw.me, project));
