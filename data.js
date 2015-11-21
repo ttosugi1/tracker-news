@@ -103,12 +103,10 @@ function fetchIterations(project_id) {
           });
           resolve();
         } else {
-          console.log('weird issue with api?')
-          reject();
+          reject('weird issue with api?');
         }
       } else {
-        reject();
-        console.log(response.statusCode)
+        reject(response.statusCode);
       }
     });
   });
@@ -134,7 +132,7 @@ function fetchProjectMemberships(project_id) {
 
         resolve();
       } else {
-        reject();
+        reject(`Could not fetch project memberships for project_id=${project_id} status code=${response.statusCode}`);
       }
     });
   });
@@ -163,13 +161,14 @@ module.exports = {
 
           Promise.all(allPromises).then((value) => {
             resolve('projects all loaded!');
-          })
-        }, (reason) => {
-          reject('projects not loaded!');
+          }).catch((reason) => {
+            reject(`iteration or memberships not loaded! ${reason}`);
+          });
+        }).catch((reason) => {
+          reject(`projects not loaded! ${reason}`);
         });
-
-      }, (reason) => {
-        reject('fetch me failed');
+      }).catch((reason) => {
+        reject(`projects not loaded! ${reason}`);
       });
     });
   },
