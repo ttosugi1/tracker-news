@@ -9,6 +9,7 @@ const HEADERS = {
 };
 
 const BASE_URI = 'https://www.pivotaltracker.com/services/v5'
+//const BASE_URI = 'https://tracker-frontend-110671320-minimize-url-bug-fix.cfapps.io/services/v5'
 
 let me_ = {};
 let projects_ = {};
@@ -75,7 +76,7 @@ function fetchIterations(project_id) {
     const options = {
       url: `${BASE_URI}/projects/${project_id}/iterations`,
       qs: {
-        offset: -3,
+        offset: -12,
         scope: 'done_current'
       },
       headers: HEADERS

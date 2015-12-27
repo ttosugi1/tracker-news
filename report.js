@@ -17,7 +17,7 @@ function project_name(data) {
 }
 
 function iterationTrends() {
-  return "\n========================\nChanges from last iteration\n========================";
+  return "\n===========================\nChanges from last iteration\n===========================";
 }
 
 function story_ownership(data) {
@@ -105,6 +105,19 @@ function ownership_interestingness(project) {
   }
 }
 
+function aggregated_collaborator_count_interestingness(project) {
+  if (_.keys(project.aggregated_collaborator_counts).length > 0) {
+    return 1.0;
+  }
+}
+
+function aggregated_collaborator_count(project) {
+  const num_collaborators = _.keys(project.aggregated_collaborator_counts).length;
+  const num_collaborations = _.reduce(_.values(project.aggregated_collaborator_counts), function(aggr, num) { return aggr + num; }, 0);
+
+  return `You had ${pluralize('collaborator', num_collaborators, true)} over the last 10 iterations`;
+}
+
 function iteration_report(data) {
   var items = [];
 
@@ -127,6 +140,21 @@ function iteration_report(data) {
   return items;
 }
 
+function collaborator_report(data) {
+  let items = [];
+
+  items.push("\n=====================\nCollaborators Report\n=====================");
+
+  _.values(data.projects).forEach((project) => {
+    if (aggregated_collaborator_count_interestingness(project) > 0) {
+      items.push(project_name(project));
+      items.push(aggregated_collaborator_count(project));
+    }
+  });
+
+  return items
+}
+
 module.exports = {
   generate: function(data) {
     var items = [];
@@ -135,6 +163,8 @@ module.exports = {
     items.push(timestamp());
 
     items = items.concat(iteration_report(data));
+
+    items = items.concat(collaborator_report(data));
 
     return _.compact(items).join("\n");
   }

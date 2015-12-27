@@ -45,6 +45,29 @@ function collaborator_count(me, iteration_stories, iterationsBack) {
   return count;
 }
 
+function aggregated_collaborator_counts(me, iteration_stories) {
+  let count = {};
+
+  for (let iterationsBack = 0; iterationsBack < iteration_stories.length; iterationsBack++) {
+    let iterationsBackStories = iteration_stories[iterationsBack];
+    iterationsBackStories.forEach((story) => {
+      if (_.contains(story.owner_ids, me.id)) {
+        story.owner_ids.forEach((ownerId) => {
+          if (me.id != ownerId) {
+            if (count[ownerId]) {
+              count[ownerId]++;
+            } else {
+              count[ownerId] = 1;
+            }
+          }
+        });
+      }
+    });
+  }
+
+  return count;
+}
+
 function collaborator_rank(collaborator_count, personMap) {
   const topCollaborators = _.chain(collaborator_count).pairs().sortBy(item => item[1]).reverse().value();
   const result = topCollaborators.map((item) => {
@@ -86,6 +109,10 @@ function statsByProject(me, project, personMap) {
   result.collaborator_ranks = [0, 1, 2].map((iterationsBack) => {
     return collaborator_rank(result.collaborator_counts[iterationsBack], personMap);
   });
+
+  result.aggregated_collaborator_counts = aggregated_collaborator_counts(me, project.iteration_stories);
+
+  result.iteration_count = project.iteration_stories.length;
 
   return result;
 }
