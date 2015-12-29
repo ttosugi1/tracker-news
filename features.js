@@ -1,6 +1,7 @@
 "use strict";
 
 const _ = require('lodash');
+const R = require('ramda');
 
 function story_ownership_count(me, iteration_stories, iterationsBack) {
   if (iterationsBack < iteration_stories.length) {
@@ -76,6 +77,38 @@ function collaborator_rank(collaborator_count, personMap) {
   return result;
 }
 
+function story_requested_counts(project, personMap) {
+  let counts = {};
+
+  project.iteration_stories.forEach((stories) => {
+    stories.forEach((story) => {
+      const requestedById = story.requested_by_id;
+
+      if (counts[requestedById]) {
+        counts[requestedById]++;
+      } else {
+        counts[requestedById] = 1;
+      }
+    });
+  });
+
+  let ret = [];
+  for (var key in counts) {
+    let person = personMap[key];
+    let name = (person || {name: 'N/A'}).name;
+    ret.push({person_id: parseInt(key, 10), count: counts[key], name: name});
+  }
+  return ret;
+}
+
+function story_requested_count_mean(counts) {
+  return R.mean(R.map(R.prop('count'), counts));
+}
+
+function story_requested_count_median(counts) {
+  return R.median(R.map(R.prop('count'), counts));
+}
+
 function statsByProject(me, project, personMap) {
   let result = {};
   result.story_ownership_counts = [0, 1, 2].map((iterationsBack) => {
@@ -113,6 +146,13 @@ function statsByProject(me, project, personMap) {
   result.aggregated_collaborator_counts = aggregated_collaborator_counts(me, project.iteration_stories);
 
   result.iteration_count = project.iteration_stories.length;
+
+  result.story_requested_counts = story_requested_counts(project, personMap),
+
+  result.story_requested_stats = {
+    mean: story_requested_count_mean(result.story_requested_counts),
+    median: story_requested_count_median(result.story_requested_counts),
+  };
 
   return result;
 }

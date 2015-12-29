@@ -21,11 +21,15 @@ describe('report', function() {
   });
 
   describe('collaborators', function() {
-    // it.only('works', function() {
-    //   expect(target).to.contain('Your top collaborator is JOHN CC><CC АНД for the last 10 iterations with 1 story');
-    // });
     it('reports number of collaborators over last 10 iterations', function() {
       expect(target).to.contain('You had 1 collaborator over the last 10 iterations');
+    });
+  });
+
+  describe('story counts', function() {
+    it('reports story requester rank', function() {
+      expect(target).to.contain("Story Requester Stats");
+      expect(target).to.contain("Miles Dyson (14)\nRobert Brewster (7)\nAndy Goode (5)\n\n");
     });
   });
 });

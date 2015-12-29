@@ -39,7 +39,7 @@ describe('features', function() {
       expect(_.size(target.projects[101].aggregated_collaborator_counts)).to.equal(1);
     });
 
-    it('counts pairs with person_id 211', function() {
+    it('counts pairs with another person', function() {
       expect(target.projects[101].aggregated_collaborator_counts[211]).to.equal(1);
     });
   });
@@ -47,6 +47,26 @@ describe('features', function() {
   describe('iteration_count', function() {
     it('works', function() {
       expect(target.projects[101].iteration_count).to.equal(10);
+    });
+  });
+
+  describe('story_requested_counts', function() {
+    it('counts number of stories requested', function() {
+      expect(target.projects[101].story_requested_counts).to.eql(
+        [
+          {name: 'Miles Dyson', person_id: 201, count: 14},
+          {name: 'Robert Brewster', person_id: 202, count: 7},
+          {name: 'Andy Goode', person_id: 203, count: 5}
+        ]
+      );
+    });
+
+    it('calculates mean', function() {
+      expect(target.projects[101].story_requested_stats.mean).to.equal(26/3);
+    });
+
+    it('calculates median', function() {
+      expect(target.projects[101].story_requested_stats.median).to.equal(7);
     });
   });
 });

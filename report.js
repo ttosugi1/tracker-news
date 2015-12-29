@@ -4,6 +4,8 @@ const strftime = require('strftime');
 const _ = require('lodash');
 const pluralize = require('pluralize');
 
+const R = require('ramda');
+
 function title(data) {
   return `Report Card for ${data.me.name}`
 }
@@ -13,7 +15,7 @@ function timestamp() {
 }
 
 function project_name(data) {
-  return `\n*Project ${data.name}*`;
+  return `*Project ${data.name}*`;
 }
 
 function iterationTrends() {
@@ -155,6 +157,23 @@ function collaborator_report(data) {
   return items
 }
 
+
+function story_requested_count_report(data) {
+  let items = [];
+
+  items.push("\n=================Story Requester Stats=================");
+  _.values(data.projects).forEach((project) => {
+    items.push("\n" + project_name(project));
+
+    let sorted_requesters = R.reverse(R.sortBy(R.prop('count'), project.story_requested_counts));
+    sorted_requesters.forEach((r) => {
+      items.push(`${r.name} (${r.count})`);
+    });
+  });
+
+  return items;
+}
+
 module.exports = {
   generate: function(data) {
     var items = [];
@@ -165,6 +184,8 @@ module.exports = {
     items = items.concat(iteration_report(data));
 
     items = items.concat(collaborator_report(data));
+
+    items = items.concat(story_requested_count_report(data));
 
     return _.compact(items).join("\n");
   }
