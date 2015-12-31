@@ -8,8 +8,7 @@ const HEADERS = {
   'X-TrackerToken': process.env.TRACKER_TOKEN
 };
 
-const BASE_URI = 'https://www.pivotaltracker.com/services/v5'
-//const BASE_URI = 'https://tracker-frontend-110671320-minimize-url-bug-fix.cfapps.io/services/v5'
+const BASE_URI = process.env.BASE_URI || 'https://www.pivotaltracker.com/services/v5'
 
 let me_ = {};
 let projects_ = {};
@@ -55,19 +54,36 @@ function fetchProject(project_id) {
   });
 }
 
-function fetchStories(project_id, start_date, end_date) {
-  const options = {
-    url: `${BASE_URI}/projects/${project_id}/stories`,
-    headers: HEADERS
-  }
-
-  console.log(`fetchStories ${project_id}`);
-
-  request(options, (error, response, body) => {
-    if (!error && response.statusCode == 200) {
-      const stories = JSON.parse(body);
-      stories_[project_id] = stories;
+function fetchStories(project_id, start_date, limit, offset) {
+  return new Promise(function(resolve, reject) {
+    const options = {
+      url: `${BASE_URI}/projects/${project_id}/stories`,
+      headers: HEADERS,
+      qs: {
+        updated_after: start_date,
+        limit: limit,
+        offset: offset,
+      }
     }
+
+    console.log(`fetchStories ${project_id}, ${start_date} ${offset}`);
+
+    request(options, (error, response, body) => {
+      if (!error && response.statusCode == 200) {
+        const stories = JSON.parse(body);
+        if (projects_[project_id].stories === undefined) {
+          projects_[project_id].stories = [];
+        }
+        projects_[project_id].stories.push(stories);
+        if (stories.length === limit) {
+          fetchStories(project_id, start_date, limit, offset + limit)
+        } else {
+          resolve();
+        }
+      } else {
+        reject();
+      }
+    });
   });
 }
 
@@ -154,11 +170,18 @@ module.exports = {
 
         const fetchProjectPromises = projectIds.map(project_id => fetchProject(project_id));
 
+        const now = new Date();
+        const yearAgo = now.setFullYear(now.getFullYear() - 1);
+
         Promise.all(fetchProjectPromises).then((value) => {
+          const fetchStoryPromises = projectIds.map((projectId) => {
+            return fetchStories(projectId, yearAgo, 500, 0);
+          });
+
           const fetchIterationPromises = projectIds.map(project_id => fetchIterations(project_id));
           const fetchProjectMembershipPromises = projectIds.map(project_id => fetchProjectMemberships(project_id));
 
-          const allPromises = [...fetchIterationPromises, ...fetchProjectMembershipPromises];
+          const allPromises = [...fetchStoryPromises, ...fetchIterationPromises, ...fetchProjectMembershipPromises];
 
           Promise.all(allPromises).then((value) => {
             resolve('projects all loaded!');
