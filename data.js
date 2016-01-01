@@ -3,6 +3,7 @@
 const request = require('request');
 const helpers = require('./helpers');
 const _ = require('lodash');
+const R = require('ramda');
 
 const HEADERS = {
   'X-TrackerToken': process.env.TRACKER_TOKEN
@@ -54,6 +55,8 @@ function fetchProject(project_id) {
   });
 }
 
+var sortByUpdatedAt = R.sortBy(R.prop('updated_at'));
+
 function fetchStories(project_id, start_date, limit, offset) {
   return new Promise(function(resolve, reject) {
     const options = {
@@ -74,10 +77,11 @@ function fetchStories(project_id, start_date, limit, offset) {
         if (projects_[project_id].stories === undefined) {
           projects_[project_id].stories = [];
         }
-        projects_[project_id].stories.push(stories);
+        projects_[project_id].stories = projects_[project_id].stories.concat(stories);
         if (stories.length === limit) {
           fetchStories(project_id, start_date, limit, offset + limit)
         } else {
+          projects_[project_id].stories = sortByUpdatedAt(projects_[project_id].stories);
           resolve();
         }
       } else {
